@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="d3/d3.v2.js"></script>
+    <script src="treemap.js"></script>
+    <style>
+        path {
+            fill: none;
+            stroke: #d5d5d5;
+        }
+
+        circle {
+            fill: #6cacd1;
+            stroke: #27579e;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: auto;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        form {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .node {
+            border: solid 1px white;
+            font: 10px sans-serif;
+            line-height: 12px;
+            overflow: hidden;
+            position: absolute;
+            text-indent: 2px;
+        }
+    </style>
+</head>
+<body>
+<form>
+    <label><input type="radio" name="mode" value="size" checked> Size</label>
+    <label><input type="radio" name="mode" value="count"> Count</label>
+</form>
+</body>
+</html>
