@@ -1,28 +1,34 @@
 /**
  * Created with JetBrains WebStorm.
- * User: 100457636
+ * User: Rafa
  * Date: 16/11/12
  * Time: 12:23 PM
- * To change this template use File | Settings | File Templates.
  */
-var margin = {top: 20, right: 0, bottom: 0, left: 0},
-    width = 1500,
-    height = 700 - margin.top - margin.bottom,
+var margin       = {top: 20, right: 0, bottom: 0, left: 0},
+    width        = 1500,
+    height       = 700 - margin.top - margin.bottom,
     formatNumber = d3.format(",d"),
     transitioning,
     root,
     originalRoot;
 
-// Filtering parameters
-var minValue = 0, maxValue=999999;
+var svgXmlns = "http://www.w3.org/2000/svg";
+
+// Filtering parameters (frequency)
+var minValue = 0,
+    maxValue = 999999;
+
+// Fonts
+var maxFontSize = util.toInt(d3.select('body').style('font-size')),
+    minFontSize = 8;
 
 var x = d3.scale.linear()
     .domain([0, width])
-    .range([0, width]);
+    .range ([0, width]),
 
-var y = d3.scale.linear()
+    y = d3.scale.linear()
     .domain([0, height])
-    .range([0, height]);
+    .range ([0, height]);
 
 var treemap = d3.layout.treemap()
     .children(function(d, depth) { return depth ? null : d.children; })
@@ -52,12 +58,17 @@ grandparent.append("text")
     .attr("y", 6 - margin.top)
     .attr("dy", ".75em");
 
+// Creating font for measuring purposes.
+var font        = new Font();
+font.fontFamily = d3.select('body').style('font-family').split(', ')[0];
+font.src    = font.fontFamily;
+
 d3.json("0_1000000.json", function(tree) {
 
     root = originalRoot = tree;
 
     initialize(root);
-    accumulate(root);
+//    accumulate(root);
     layout(root);
     display(root);
     controls(root);
@@ -84,16 +95,23 @@ d3.json("0_1000000.json", function(tree) {
     // the parent’s dimensions are not discarded as we recurse. Since each group
     // of sibling was laid out in 1×1, we must rescale to fit using absolute
     // coordinates. This lets us use a viewport to zoom.
-    function layout(d) {
+    // doFilter indicates whether or not filtering should be done. By default it is true.
+    function layout(d, doFilter) {
+        doFilter = (typeof doFilter === "undefined") ? true : doFilter;
+
         if (d.children) {
-            treemap.nodes({children: d.children.filter(filter)});
-            d.children.filter(filter).forEach(function(c) {
+
+            var children = doFilter ? d.children.filter(filter) : d.children;
+
+            treemap.nodes({children: children});
+
+            children.forEach(function(c) {
                 c.x = d.x + c.x * d.dx;
                 c.y = d.y + c.y * d.dy;
                 c.dx *= d.dx;
                 c.dy *= d.dy;
                 c.parent = d;
-                layout(c);
+                layout(c,false); // this line ensures filtering is only at the first level
             });
         }
     }
@@ -124,7 +142,7 @@ d3.json("0_1000000.json", function(tree) {
         g.filter(function(d) { return !d.children; })
             .classed("leaf", true);
 
-        g.selectAll(".child")
+        g.selectAll("rect.child")
             .data(function(d) { return d.children || [d]; })
             .enter().append("rect")
             .attr("class", "child")
@@ -134,11 +152,12 @@ d3.json("0_1000000.json", function(tree) {
             .attr("class", "parent")
             .call(rect)
             .append("title")
-            .text(function(d) { return formatNumber(d.value); });
+            .text(function(d) { return formatNumber(d.value) + '\n' + d.entropy; });
 
         g.append("text")
             .attr("dy", ".75em")
             .text(function(d) { return d.key; })
+            .classed('parent', true)
             .call(text);
 
         function transition(d) {
@@ -214,9 +233,100 @@ d3.json("0_1000000.json", function(tree) {
                 maxValue = ui.values[1];
                 var target =  grandparent.datum() == null ? root : grandparent.datum();
                 d3.select('g.depth').data([]).exit().remove();
-                layout(root);
-                display(root);
+                layout(target);
+                display(target);
             }
         });
+
+        var maxEntropy = d3.max(root.children.map(function(d) {return d.entropy;}));
+
+        $( "#entropy_slider" ).slider({
+            range: true,
+            min: 0,
+            max: maxEntropy,
+            step: 0.01,
+            values: [ 0, maxEntropy ],
+            stop: function( event, ui ) {
+                $("#entropy").val( ui.values[ 0 ] + " - " + ui.values[ 1 ] );
+                minValue = ui.values[0];
+                maxValue = ui.values[1];
+
+                updateOnEntropy(minValue);
+            }
+        });
+    }
+
+    /**
+     * Given 'this' being a rect element, creates a label for its data item and
+     * positions the label on the middle-left. Sets its opacity to 0.
+     * @param d data item
+     * @param i index
+     */
+    function createLabel(d, i){
+        var x = +d3.select(this).attr('x'),
+            y = +d3.select(this).attr('y'),
+            w = util.toInt(d3.select(this).attr('width')),
+            h = util.toInt(d3.select(this).attr('height')),
+            leftPadding =  5, // in pixels
+            vPadding    = .5; // vertical padding in EM units
+
+        var measures = util.adjustFontSize(font, d.key, w-leftPadding, h-h*vPadding, maxFontSize, minFontSize);
+
+        if (measures) {
+            var text = util.insertAfter('text', this, svgXmlns);
+
+            d3.select(text)
+                .attr('dominant-baseline', 'middle') // baseline is in the middle
+                .attr('x', x)
+                .attr('y', y + h/2)
+                .attr('font-size', measures.size+'px')
+                .attr('dx', leftPadding)
+                .text(d.key)
+                .classed('child', true)
+                .style('opacity', 0);
+        }
+
+    }
+
+    /**
+     * Updates the view based on the entropy threshold
+     * @param threshold categories whose entropy value is greater than this are cut
+     */
+    function updateOnEntropy(threshold){
+        // if font isn't loaded yet, abort and call this method again when it's loaded
+        if (!font.loaded){
+            font.src    = font.fontFamily;
+            font.onload = function(){updateOnEntropy(threshold)};
+            return;
+        }
+
+        var belowThreshold = d3.selectAll('g.children')
+            .filter(function(d){return d.entropy < threshold});
+
+        // fades-out the parent's title
+        belowThreshold.selectAll('text.parent')
+            .transition()
+            .style('opacity', 0.0);
+
+        // creates labels for the children, if it hasn't been done already
+        belowThreshold.filter(function(){
+                return d3.select(this).selectAll('text.child').empty();
+            })
+            .selectAll("rect.child")
+            .each(createLabel);
+
+        // 'reveals' labels of children
+        belowThreshold.selectAll('text.child')
+            .transition()
+            .style('opacity', 1);
+
+        var aboveThreshold = d3.selectAll('g.children')
+            .filter(function(d){return d.entropy >= threshold});
+        aboveThreshold.selectAll('text.parent')
+            .transition()
+            .style('opacity', 1);
+
+        aboveThreshold.selectAll('text.child')
+            .style('opacity',0);
     }
 });
