@@ -57,7 +57,7 @@ d3.json("0_1000000.json", function(tree) {
     root = originalRoot = tree;
 
     initialize(root);
-//    accumulate(root);
+    accumulate(root);
     layout(root);
     display(root);
     controls(root);
@@ -134,8 +134,7 @@ d3.json("0_1000000.json", function(tree) {
             .attr("class", "parent")
             .call(rect)
             .append("title")
-            .text(function(d) { return formatNumber(d.value) + '\n' 
-		+ d.entropy ;  });
+            .text(function(d) { return formatNumber(d.value); });
 
         g.append("text")
             .attr("dy", ".75em")
