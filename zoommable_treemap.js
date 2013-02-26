@@ -5,8 +5,9 @@
  * Time: 12:23 PM
  */
 var margin       = {top: 20, right: 0, bottom: 0, left: 0},
-    width        = 1500,
-    height       = 700 - margin.top - margin.bottom,
+    width        = util.toInt(d3.select('#chart').style('width')),
+    height       = document.getElementsByTagName('body')[0].clientHeight - document.getElementById('controls').clientHeight
+                    - margin.top - margin.bottom,
     formatNumber = d3.format(",d"),
     transitioning,
     root,
@@ -61,7 +62,7 @@ grandparent.append("text")
 // Creating font for measuring purposes.
 var font        = new Font();
 font.fontFamily = d3.select('body').style('font-family').split(', ')[0];
-font.src    = font.fontFamily;
+font.src        = font.fontFamily;
 
 d3.json("0_1000000.json", function(tree) {
 

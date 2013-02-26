@@ -11,6 +11,7 @@
 
     <style>
         html {
+            /*overflow: hidden;*/
             width: 100%;
             height: 100%;
         }
@@ -20,14 +21,23 @@
             font-size  : 13pt;
             margin     : auto;
             position   : relative;
-            width      : 100%;
-            height     : 100%;
+            width      : 98%;
+            height     : 98%;
         }
 
         #chart {
-            width: 1500px;
-            height: 700px;
+            width: 100%;
+            /*height: 100%;*/
             background: #bbb;
+            margin: 0;
+        }
+
+        #controls {
+            height: 200px;
+        }
+
+        #controls p{
+            margin: 0;
         }
 
         text {
@@ -75,7 +85,7 @@
         }
 
         #filter, #entropy_slider {
-            width: 1500px;
+            width: 800px;
         }
 
         .transparent {
@@ -91,19 +101,21 @@
 <body>
 <p id="chart"></p>
 
+<div id="controls">
+
 <p>
     <label for="count">Count:</label>
     <input type="text" id="count" style="border: 0; color: #f6931f; font-weight: bold;" />
 </p>
-
 <div id="filter"></div>
 
 <p>
     <label for="entropy">Entropy:</label>
     <input type="text" id="entropy" style="border: 0; color: #f6931f; font-weight: bold;" />
 </p>
-
 <div id="entropy_slider"></div>
+
+</div>
 
 <script src="zoommable_treemap.js"></script>
 </body>
