@@ -66,7 +66,7 @@ var font        = new Font();
 font.fontFamily = d3.select('body').style('font-family').split(', ')[0];
 font.src        = font.fontFamily;
 
-d3.json("0_1000000.json", function(tree) {
+d3.json("verbs-all.json", function(tree) {
 
     root = originalRoot = tree;
 
