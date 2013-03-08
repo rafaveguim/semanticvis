@@ -168,13 +168,16 @@ d3.json("0_1000000.json", function(tree) {
             .data(function(d){return d.children})
             .enter()
             .append('text')
-            .call(childText)
+            .classed('child',true)
+            .call(childText);
 
         g.append("text")
             .attr("dy", ".75em")
             .text(function(d) { return d.key; })
             .classed('parent', true)
             .call(text);
+
+        updateOnEntropy(gChildren, false);
 
         function transition(d) {
             if (transitioning || !d) return;
@@ -199,10 +202,11 @@ d3.json("0_1000000.json", function(tree) {
 
             // Transition to the new view.
             t1.selectAll("text").call(text).style("fill-opacity", 0);
-            t2.selectAll("text").call(text).style("fill-opacity", 1);
+            t2.selectAll("text").call(text).style("fill-opacity", null);
             t1.selectAll("rect").call(rect);
             t2.selectAll("rect").call(rect);
-
+            t2.selectAll("text.child").call(childText);
+            
             // Remove the old node when the transition is finished.
             t1.remove().each("end", function() {
                 svg.style("shape-rendering", "crispEdges");
@@ -225,16 +229,14 @@ d3.json("0_1000000.json", function(tree) {
 
         text.attr("x", function(d) { return x(d.x);})
             .attr("y", function(d) { return y(d.y) + rectHeight(d)/2; })
-            .attr('width' , rectWidth)
-            .attr('height', rectHeight)
+//          .attr('width' , rectWidth)
+//          .attr('height', rectHeight)
             .attr('dominant-baseline', 'middle')
-            .classed('child', true)
-            .style('opacity', 0)
             .text(function(d){return d.key})
             .attr('dx', leftPadding)
             .attr('font-size', function(d){
-                var w = +d3.select(this).attr('width'),
-                    h = +d3.select(this).attr('height');
+                var w = rectWidth(d),
+                    h = rectHeight(d);
 
                 if (!d.key) // yes, there's a category whose key is null TODO: investigate it
                     return 0;
@@ -282,7 +284,7 @@ d3.json("0_1000000.json", function(tree) {
                 $("#count").val( ui.values[ 0 ] + " - " + ui.values[ 1 ] );
                 frequencyMin = ui.values[0];
                 frequencyMax = ui.values[1];
-                var target =  grandparent.datum() == null ? root : grandparent.datum();
+                var target =  d3.select('g.depth').datum();
                 d3.select('g.depth').data([]).exit().remove();
                 layout(target);
                 display(target);
@@ -302,7 +304,7 @@ d3.json("0_1000000.json", function(tree) {
                 entropyMin = ui.values[0];
                 entropyMax = ui.values[1];
 
-                updateOnEntropy(entropyMin);
+                updateOnEntropy(d3.selectAll('g.children'), true);
             }
         });
     }
@@ -341,36 +343,30 @@ d3.json("0_1000000.json", function(tree) {
 
     /**
      * Updates the view based on the entropy threshold
-     * @param threshold categories whose entropy value is greater than this are cut
-     */
-    function updateOnEntropy(threshold){
-        // if font isn't loaded yet, abort and call this method again when it's loaded
-        // it's not being used now, cause font is already being called in the initialization
-//        if (!font.loaded){
-//            font.src    = font.fontFamily;
-//            font.onload = function(){updateOnEntropy(threshold)};
-//            return;
-//        }
+     * @param selection selection in which the update should operate
+     * @param transition if falsey, doesn't animate
 
-        var outter = d3.selectAll('g.children')
-            .filter(function(d){return !entropyFilter(d)});
+     */
+    function updateOnEntropy(selection, transition){
+
+        var outter = selection.filter(function(d){return !entropyFilter(d)});
 
         // fades-out the parent's title
-        outter.selectAll('text.parent')
-            .transition()
-            .style('opacity', 0.0);
+        if (transition){
+            outter.selectAll('text.parent').transition().style('opacity', 0.0);
+            outter.selectAll('text.child').transition().style('opacity', 1);
+        } else {
+            outter.selectAll('text.parent').style('opacity', 0.0);
+            outter.selectAll('text.child').style('opacity', 1);
+        }
 
         // reveals children's labels
-        outter.selectAll('text.child')
-            .transition()
-            .style('opacity', 1);
+        
 
-        var inner = d3.selectAll('g.children')
-            .filter(entropyFilter);
+        var inner = selection.filter(entropyFilter);
 
-        inner.selectAll('text.parent')
-            .transition()
-            .style('opacity', 1);
+        if (transition) inner.selectAll('text.parent').transition().style('opacity', 1);
+        else            inner.selectAll('text.parent').style('opacity', 1);
 
         inner.selectAll('text.child')
             .style('opacity',0);
