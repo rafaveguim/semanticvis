@@ -22,7 +22,7 @@ var frequencyMin = 0,
     entropyMax   = 999999;
 
 // Fonts
-var maxFontSize = util.toInt(d3.select('body').style('font-size')),
+var maxFontSize = 20,
     minFontSize = 8;
 
 var x = d3.scale.linear()

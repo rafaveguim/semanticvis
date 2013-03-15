@@ -27,16 +27,23 @@ var util = new function(){
         minSize = (typeof minSize === "undefined") ? 0 : minSize;
 
         if (!this.fontMeasureCache[font.fontFamily])
-            this.initChache(font, [minSize-1, iniSize], [2, 15]);
+            this.initChache(font, [minSize, iniSize], [2, 15]);
 
-        var currSize = iniSize+1;
-
+        var currSize = iniSize;
 
         do {
-            var m = this.fontMeasureCache[font.fontFamily][--currSize][text.length];
+            var m = null;
+            try {
+                m = this.fontMeasureCache[font.fontFamily][currSize][text.length];
+            } catch (e){
+                console.log("Error obtaining measuring info for font \'"+font.fontFamily+
+                    "\', string \'"+text+"\', size "+currSize);
+            }
             if (!m)
-                m = font.measureText(text, --currSize);
-        } while ( (m.width > width || m.height > height) && currSize>minSize-1);
+                m = font.measureText(text, currSize);
+
+            currSize -= 1;
+        } while ( (m.width > width || m.height > height) && currSize>=minSize);
 
         if (currSize >= minSize)
             return {size: currSize, width: m.width, height:m.height};
