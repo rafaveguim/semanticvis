@@ -13,7 +13,7 @@ var size    = {width : d3.select('body').node().clientWidth,
 
 console.log(size.width);
 
-d3.json('verbs-all.json', function(data){
+d3.json('nouns-100k.json', function(data){
     var tree = d3.layout.tree()
         .sort(null)
         /*.size([size.height-padding.top, 
