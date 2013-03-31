@@ -54,7 +54,8 @@ var grandparent = svg.append("svg:g")
 grandparent.append("rect")
     .attr("y", -margin.top)
     .attr("width", width)
-    .attr("height", margin.top);
+    .attr("height", margin.top)
+    .append('title');
 
 grandparent.append("text")
     .attr("x", 6)
@@ -134,6 +135,10 @@ d3.json("verbs-all.json", function(tree) {
             .on("click", transition)
             .select("text")
             .text(name(d));
+
+        grandparent
+            .select('title')
+            .text(d.entropy);
 
         var g1 = svg.insert("g", ".grandparent")
             .datum(d)
