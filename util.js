@@ -68,7 +68,7 @@ var util = new function(){
     }
 
     this.randomString = function(length){
-        var alphabet = "abcdefghijklmnopqrstuvwxyz_",
+        var alphabet = "abcdefghijklmnopqrstuvwxyz_0123456789",
             result   = "";
 
         for (var i=0; i<length; i++){

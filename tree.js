@@ -6,15 +6,20 @@
  * To change this template use File | Settings | File Templates.
  */
 
-var size    = {width: 1550, height: 740},
+var size    = {width : d3.select('body').node().clientWidth, 
+               height: d3.select('body').node().clientHeight},
     padding = {left: 10, top:10},
     options = {nodeRadius: 5, maxLabelLength: 15, fontSize: 10};
 
-d3.json('0_100000.json', function(data){
+console.log(size.width);
+
+d3.json('verbs-all.json', function(data){
     var tree = d3.layout.tree()
         .sort(null)
-        .size([size.height-padding.top,
-                size.width - padding.left - options.nodeRadius - options.maxLabelLength*options.fontSize])
+        /*.size([size.height-padding.top, 
+                size.width - padding.left - options.nodeRadius - options.maxLabelLength*options.fontSize])*/ // horizontal
+        .size([size.width - padding.left - options.nodeRadius,
+            size.height-padding.top]) // vertical
         .children(function(d){
             return (d.children === 0) ? null : d.children;
         });
@@ -39,7 +44,8 @@ d3.json('0_100000.json', function(data){
                 .attr('transform', 'translate('+padding.left+','+padding.top+')');
 
     var link = d3.svg.diagonal()
-                .projection(function(d){ return [d.y, d.x]});
+                //.projection(function(d){ return [d.y, d.x]}); // horizontal
+                .projection(function(d){ return [d.x, d.y]});   // vertical
 
     svg.selectAll('path.link')
         .data(links)
@@ -54,12 +60,16 @@ d3.json('0_100000.json', function(data){
                         .append('svg:g')
                         .classed('node', true)
                         .attr("transform", function(d){
-                            return "translate(" + d.y + "," + d.x + ")";
+                            //return "translate(" + d.y + "," + d.x + ")"; // horizontal
+                            return "translate(" + d.x + "," + d.y + ")"; // vertical
                         });
+
     nodeGroup.append('svg:circle')
         .classed('node-dot', true)
         .attr('r', options.nodeRadius);
-    nodeGroup.append('svg:text')
+
+    // append labels
+    /*nodeGroup.append('svg:text')
         .attr('text-anchor', function(d){
             return d.children == null ? 'end' : 'start'
         })
@@ -68,5 +78,5 @@ d3.json('0_100000.json', function(data){
             return d.children == null ? -gap : gap;
         })
         .attr('dy', 3)
-        .text(function(d){return d.key;});
+        .text(function(d){return d.key;});*/
 });
