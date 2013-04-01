@@ -13,7 +13,7 @@ var size    = {width : d3.select('body').node().clientWidth,
 
 console.log(size.width);
 
-d3.json('nouns-100k.json', function(data){
+d3.json('tree-nouns-100k-1b40de1eae.json', function(data){
     var tree = d3.layout.tree()
         .sort(null)
         /*.size([size.height-padding.top, 
@@ -66,7 +66,9 @@ d3.json('nouns-100k.json', function(data){
 
     nodeGroup.append('svg:circle')
         .classed('node-dot', true)
-        .attr('r', options.nodeRadius);
+        .attr('r', options.nodeRadius)
+        .append('title')
+        .text(function(d){return d.key});
 
     // append labels
     /*nodeGroup.append('svg:text')
