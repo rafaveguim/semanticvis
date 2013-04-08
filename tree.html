@@ -2,20 +2,27 @@
 <html>
 <head>
     <title></title>
-    <script src="d3/d3.v2.js"></script>
+    <script src="queue/queue.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
     
     <style>
 
         html, body  {
-            width: 100%;
             height: 100%;
             margin: 0;
-            overflow: hidden;
+            width: 100%;
+            /*overflow: hidden;*/
+            /*width: 15000px;*/
+            /*overflow: scroll;*/
         }
 
         path {
             fill: none;
             stroke: #d5d5d5;
+        }
+
+        path.cut {
+            stroke: #ffa40b;
         }
 
         circle {
