@@ -2,18 +2,26 @@
 <html>
 <head>
     <title></title>
+
+    <link rel="stylesheet" href="colorbrewer.css">
+
     <script src="queue/queue.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
-    
+
     <style>
 
-        html, body  {
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
+        body  {
             height: 100%;
             margin: 0;
             width: 100%;
             /*overflow: hidden;*/
-            /*width: 15000px;*/
-            /*overflow: scroll;*/
+            /*width: 3000px;*/
+            overflow: scroll;
         }
 
         path {
@@ -27,11 +35,15 @@
 
         circle {
             fill: #6cacd1;
-            stroke: #27579e;
+            /*stroke: #27579e;*/
         }
 
         .node {
             font: 10pt sans-serif;
+        }
+
+        path.cut {
+            pointer-events: none;
         }
     </style>
 </head>

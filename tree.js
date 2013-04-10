@@ -6,79 +6,122 @@
  * To change this template use File | Settings | File Templates.
  */
 
-var size    = {width : d3.select('body').node().clientWidth,
-        height: d3.select('body').node().clientHeight},
+var size = { width : d3.select('body').node().clientWidth,
+        height : d3.select('body').node().clientHeight },
     padding = {left: 10, top:10},
     options = {nodeRadius: 5, maxLabelLength: 15, fontSize: 10};
 
 var tree = d3.layout.tree()
     .sort(null)
-    .size([size.width - padding.left - options.nodeRadius, size.height - padding.top]) // vertical
-    .children(function(d){
-        return !d.children ? null : d.children;
-    });
+    .size([size.width - padding.left - options.nodeRadius, size.height - padding.top - options.nodeRadius])
+    .children(function(d){ return !d.children ? null : d.children; });
 
-d3.json('tree-nouns-5mi-0-5d1409f.json', function(data){
-    var svg = d3.select('body')
-        .append('svg:svg')
-        .attr('width', size.width)
-        .attr('height', size.height)
-        .append("svg:g")
-        .classed('container', true)
-        .attr('transform', 'translate('+padding.left+','+padding.top+')');
+var svg = d3.select('body')
+    .append('svg:svg')
+    .attr('width', size.width)
+    .attr('height', size.height)
+    .attr("class", "BuGn");
 
-    display(svg, data);
+var root = null;
 
-    d3.select('body').on('click', function(){ display(svg, data); });
+var cutFiles = ['cut-nouns-100k-0-5d1409f.txt', 'cut-nouns-500k-0-5d1409f.txt', 'cut-nouns-5mi-0-5d1409f.txt'],
+    cuts     = null;
+
+// Loading cuts with a little help of queue.js.
+
+var q = queue(cutFiles.length);
+// an array of tasks that will load the files
+var tasks = cutFiles.map(function (f) {
+    return function (callback) { d3.json(f, callback); };
 });
 
+// loads the files in parallel
+tasks.forEach(function (t) { q.defer(t); });
+
+q.awaitAll(function (error, results) {
+    cuts = results;
+    d3.json('tree-nouns-5mi-0-5d1409f.json', initialize);
+});
+
+function initialize(data){
+    root = data;
+
+    display(root);
+
+    d3.select('body').on('click', clickBody);
+}
+
+function clickBody(){ display(root); }
 
 function clickCircle(d){
     event.stopImmediatePropagation();
-    display(d3.select('g.container'), d);
+    display(d);
 }
 
-
-function display(svg, root){
-
+function display(root){
     var nodes = tree.nodes(root),
         links = tree.links(nodes);
 
     var link = d3.svg.diagonal()
-        .projection(function(d){ return [d.x, d.y]});   // vertical
+        .projection(function(d){ return [d.x, d.y]});
 
-//    var bindLinks = function(links){
-        var path = svg.selectAll('path.link').data(links);
-        path.exit().remove();
-        path.enter().append('svg:path');
-        path.classed('link', true)
-            .attr('d', link);
-//    };
+    svg.selectAll('g.container').remove();
 
-//    var bindNodes = function(nodes){
-        var nodeGroup = svg.selectAll('g.node').data(nodes);
-        nodeGroup.exit().remove();
-        nodeGroup.enter()
-            .append('svg:g')
-            .classed('node', true)
-            .append('svg:circle')
-            .classed('node-dot', true)
-            .append('title');
-        nodeGroup.attr("transform", function(d){
-            return "translate(" + d.x + "," + d.y + ")";
+    var color = d3.scale.quantile()
+        .domain(d3.values(nodes.map(function(d){ return d.value; })))
+        .range(d3.range(9));
+
+    var offscreen = d3.select(document.createElementNS(d3.ns.prefix.svg, "g"))
+        .classed('container', true)
+        .attr('transform', 'translate('+padding.left+','+padding.top+')');
+
+    var path = offscreen.selectAll('path.link').data(links);
+    path.exit().remove();
+    path.enter().append('svg:path');
+    path.classed('link', true)
+        .attr('d', link);
+
+    var nodeGroup = offscreen.selectAll('circle.node').data(nodes);
+    nodeGroup.exit().remove();
+    nodeGroup.enter()
+        .append('svg:circle')
+        .classed('node', true)
+        .append('title');
+    nodeGroup.attr('cx', function(d){ return d.x })
+        .attr('cy', function(d){ return d.y })
+        .attr('r', options.nodeRadius)
+        .on('click', clickCircle)
+        .attr("class", function(d) { return "q" + color(d.value) + "-9"; })
+        .select('title')
+        .text(function(d){ return d.key+'\n'+d.value });
+
+
+    var colors = ['#05D9E8', '#E85005', '#F0DE1D'];
+
+    // replaces the ids by the actual nodes they refer to
+    var cutsNodes = cuts.map(function (cut) {
+        return nodes.filter(function (n) {
+            return cut.indexOf(n.id) > -1;
         });
-        var circles = nodeGroup.select('circle.node-dot')
-            .attr('r', options.nodeRadius)
-            .on('click', clickCircle);
-        circles.select('title')
-            .text(function(d){ return d.key+'\n'+d.value });
+    });
 
-//    };
+    // draws a polyline for each cut
+    offscreen.selectAll('path.cut')
+        .data(cutsNodes)
+        .enter()
+        .append('svg:path')
+        .classed('cut', true)
+        .attr('d', function (d) {
+            var line = d3.svg.line();
+            return line(d.map(function (node) {
+                return [node.x, node.y];
+            }));
+        })
+        .style('stroke', function (d, i) {
+            return colors[i];
+        });
 
-    // creates/updates links and nodes
-//    bindLinks(links);
-//    bindNodes(nodes);
-
+    svg.node().appendChild(offscreen.node());
 }
 
 /* data mapping */
@@ -102,39 +145,9 @@ function display(svg, root){
  .text(function(d){return d.key;});*/
 
 
-/*Drawing of cuts. Need to draw them after all cut files are loaded. Uses queue.js.
 
- var cutFiles = ['cut-nouns-100k-0-5d1409f.txt', 'cut-nouns-500k-0-5d1409f.txt', 'cut-nouns-5mi-0-5d1409f.txt'];
- var q = queue(cutFiles.length);
 
- // an array of tasks that will load the files
- var tasks = cutFiles.map(function(f){
- return function(callback){
- d3.json(f, callback);
- };
- });
 
- // loads the files in parallel
- tasks.forEach(function(t) { q.defer(t); });
- q.awaitAll(function(error, cuts) {
- var colors = ['red', 'orange', 'pink'];
 
- // replaces the ids by the actual nodes they refer to
- cuts = cuts.map(function(cut){
- return nodes.filter(function(n){return cut.indexOf(n.id)>-1;});
- });
 
- // draws a polyline for each cut
- svg.selectAll('path.cut')
- .data(cuts)
- .enter()
- .append('svg:path')
- .classed('cut', true)
- .attr('d', function(d){
- var line = d3.svg.line();
- return line(d.map(function(node){
- return [node.x, node.y];
- }));
- })
- .style('stroke', function(d,i){return colors[i];});*//**//*
- });*/
+
