@@ -24,7 +24,11 @@ var svg = d3.select('body')
 
 var root = null;
 
-var cutFiles = ['cut-nouns-100k-0-5d1409f.txt', 'cut-nouns-500k-0-5d1409f.txt', 'cut-nouns-5mi-0-5d1409f.txt'],
+var
+//cutFiles = ['cut-nouns-li_abe-100k-0-06141a7dc4.txt', 'cut-nouns-li_abe-500k-0-06141a7dc4.txt', 'cut-nouns-li_abe-5mi-0-06141a7dc4.txt'],
+//    cutFiles = ['cut-nouns-wagner-5mi-0-06141a7dc4.txt', 'cut-nouns-li_abe-5mi-0-06141a7dc4.txt'],
+    cutFiles = ['cut-nouns-wagner-5mi-100-0-06141a7dc4.txt', 'cut-nouns-wagner-5mi-1000-0-06141a7dc4.txt',
+        'cut-nouns-wagner-5mi-10000-0-06141a7dc4.txt'/*, 'cut-nouns-wagner-5mi-100000-0-06141a7dc4.txt'*/],
     cuts     = null;
 
 // Loading cuts with a little help of queue.js.
@@ -32,7 +36,7 @@ var cutFiles = ['cut-nouns-100k-0-5d1409f.txt', 'cut-nouns-500k-0-5d1409f.txt', 
 var q = queue(cutFiles.length);
 // an array of tasks that will load the files
 var tasks = cutFiles.map(function (f) {
-    return function (callback) { d3.json(f, callback); };
+    return function (callback) { d3.json('data/'+f, callback); };
 });
 
 // loads the files in parallel
@@ -40,7 +44,7 @@ tasks.forEach(function (t) { q.defer(t); });
 
 q.awaitAll(function (error, results) {
     cuts = results;
-    d3.json('tree-nouns-5mi-0-5d1409f.json', initialize);
+    d3.json('data/tree-nouns-li_abe-5mi-0-06141a7dc4.json', initialize);
 });
 
 function initialize(data){
@@ -49,6 +53,14 @@ function initialize(data){
     display(root);
 
     d3.select('body').on('click', clickBody);
+
+    document.onkeydown = function(evt){
+        if (evt.keyCode == 38){
+            var d = d3.select('g.container > circle.node:first-of-type')
+                .datum().parent;
+            display(d);
+        }
+    };
 }
 
 function clickBody(){ display(root); }
@@ -71,6 +83,7 @@ function display(root){
         .domain(d3.values(nodes.map(function(d){ return d.value; })))
         .range(d3.range(9));
 
+    // offscreen strategy, as described in https://groups.google.com/forum/?fromgroups=#!topic/d3-js/3ZBw94L0UD4
     var offscreen = d3.select(document.createElementNS(d3.ns.prefix.svg, "g"))
         .classed('container', true)
         .attr('transform', 'translate('+padding.left+','+padding.top+')');
@@ -81,22 +94,7 @@ function display(root){
     path.classed('link', true)
         .attr('d', link);
 
-    var nodeGroup = offscreen.selectAll('circle.node').data(nodes);
-    nodeGroup.exit().remove();
-    nodeGroup.enter()
-        .append('svg:circle')
-        .classed('node', true)
-        .append('title');
-    nodeGroup.attr('cx', function(d){ return d.x })
-        .attr('cy', function(d){ return d.y })
-        .attr('r', options.nodeRadius)
-        .on('click', clickCircle)
-        .attr("class", function(d) { return "q" + color(d.value) + "-9"; })
-        .select('title')
-        .text(function(d){ return d.key+'\n'+d.value });
-
-
-    var colors = ['#05D9E8', '#E85005', '#F0DE1D'];
+    var colors = ['#878D00', '#E70000', '#0098E0'];
 
     // replaces the ids by the actual nodes they refer to
     var cutsNodes = cuts.map(function (cut) {
@@ -117,9 +115,31 @@ function display(root){
                 return [node.x, node.y];
             }));
         })
-        .style('stroke', function (d, i) {
-            return colors[i];
-        });
+        .style('stroke', function (d, i) { return colors[i]; })
+        .on('mouseover', function(){
+            d3.select(this).style('stroke-width', '3px');
+            var last = d3.select('g.container > path.cut:last-of-type').node();
+            if (last!=this)
+                this.parentNode.insertBefore(this, last.nextElementSibling);
+        })
+        .on('mouseout', function(){ d3.select(this).style('stroke-width', null); });
+
+
+    var nodeGroup = offscreen.selectAll('circle.node').data(nodes);
+    nodeGroup.exit().remove();
+    nodeGroup.enter()
+        .append('svg:circle')
+        .append('title');
+    nodeGroup.attr('cx', function(d){ return d.x })
+        .attr('cy', function(d){ return d.y })
+        .attr('r', options.nodeRadius)
+        .on('click', clickCircle)
+        .attr("class", function(d) { return "q" + color(d.value) + "-9"; })
+        .classed('node', true)
+        .select('title')
+        .text(function(d){ return d.key+'\n'+d.value });
+
+
 
     svg.node().appendChild(offscreen.node());
 }
