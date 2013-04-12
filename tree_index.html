@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <style>
+        body {
+            font-family: Helvetica;
+            font-size: 10pt;
+            padding-top: 50px;
+            padding-left: 50px;
+        }
+        h2 {
+            font-size: 12pt;
+        }
+        p {
+            margin-bottom: 0;
+            margin-top: 5px;
+            color: #303030;
+        }
+    </style>
+</head>
+<body>
+
+
+<h2><a id='1' href="tree.html" onClick="redirect(event)">Wagner's C values. Noisy data</a></h2>
+<p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
+<p><em>Sample size:</em> 1,500,000</p>
+
+
+<script>
+    function redirect(evt){
+        var id = +d3.select(evt.target).attr('id');
+
+        var cuts = [];
+
+        if (id==1){
+            cuts = ['cut-n-wagner-1000-0-5000000-1c3eb76.txt',
+                    'cut-n-wagner-5000-0-5000000-1c3eb76.txt',
+                    'cut-n-wagner-10000-0-5000000-1c3eb76.txt']
+        }
+        localStorage.setItem('cutFiles', JSON.stringify(cuts));
+    }
+</script>
+
+
+
+</body>
+</html>

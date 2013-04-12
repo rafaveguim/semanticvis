@@ -25,9 +25,7 @@ var svg = d3.select('body')
 
 var root = null;
 
-var cutFiles = ['cut-n-wagner-1000-0-5000000-1c3eb76.txt',
-                'cut-n-wagner-5000-0-5000000-1c3eb76.txt',
-                'cut-n-wagner-10000-0-5000000-1c3eb76.txt'],
+var cutFiles = JSON.parse(localStorage.getItem('cutFiles')),
     cuts     = null;
 
 // Loading cuts with a little help of queue.js.
