@@ -7,6 +7,9 @@
 
     <script src="queue/queue.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.1.js"></script>
+    <link href="tipsy/tipsy.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="tipsy/jquery.tipsy.js"></script>
 
     <style>
 
@@ -19,9 +22,9 @@
             height: 100%;
             margin: 0;
             width: 100%;
-            /*overflow: hidden;*/
+            overflow: hidden;
             /*width: 3000px;*/
-            overflow: scroll;
+            /*overflow: scroll;*/
         }
 
         path {
@@ -45,10 +48,26 @@
             font: 10pt sans-serif;
         }
 
+        #searchbox {
+            margin: 0;
+            height: 25px;
+            -webkit-appearance: none;
+            padding-left: 25px;
+            background: url(images/search_icon.gif) no-repeat 2px;
+            border: solid 1px rgb(200,200,200);
+        }
+
+        .tipsy {
+            cursor: hand;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
+    <input size="50" type="search" id="searchbox" onkeyup="if (event.keyCode == 13) search(this.value)"/>
     <script src="tree.js"></script>
+
 </body>
 
 </html>

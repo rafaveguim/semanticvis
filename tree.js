@@ -6,14 +6,15 @@
  * To change this template use File | Settings | File Templates.
  */
 
-var size = { width : d3.select('body').node().clientWidth,
-        height : d3.select('body').node().clientHeight },
+var size = { width : width('body'),
+            height : height('body') - height('#searchbox') },
     padding = {left: 10, top:10},
     options = {nodeRadius: 5, maxLabelLength: 15, fontSize: 10};
 
 var tree = d3.layout.tree()
     .sort(null)
-    .size([size.width - padding.left - options.nodeRadius, size.height - padding.top - options.nodeRadius])
+    .size([size.width - padding.left - options.nodeRadius,
+        size.height - padding.top - options.nodeRadius])
     .children(function(d){ return !d.children ? null : d.children; });
 
 var svg = d3.select('body')
@@ -24,27 +25,25 @@ var svg = d3.select('body')
 
 var root = null;
 
-var
-//cutFiles = ['cut-nouns-li_abe-100k-0-06141a7dc4.txt', 'cut-nouns-li_abe-500k-0-06141a7dc4.txt', 'cut-nouns-li_abe-5mi-0-06141a7dc4.txt'],
-//    cutFiles = ['cut-nouns-wagner-5mi-0-06141a7dc4.txt', 'cut-nouns-li_abe-5mi-0-06141a7dc4.txt'],
-    cutFiles = ['cut-nouns-wagner-5mi-100-0-06141a7dc4.txt', 'cut-nouns-wagner-5mi-1000-0-06141a7dc4.txt',
-        'cut-nouns-wagner-5mi-10000-0-06141a7dc4.txt'/*, 'cut-nouns-wagner-5mi-100000-0-06141a7dc4.txt'*/],
+var cutFiles = ['cut-n-wagner-1000-0-5000000-1c3eb76.txt',
+                'cut-n-wagner-5000-0-5000000-1c3eb76.txt',
+                'cut-n-wagner-10000-0-5000000-1c3eb76.txt'],
     cuts     = null;
 
 // Loading cuts with a little help of queue.js.
-
 var q = queue(cutFiles.length);
+
 // an array of tasks that will load the files
 var tasks = cutFiles.map(function (f) {
     return function (callback) { d3.json('data/'+f, callback); };
 });
-
-// loads the files in parallel
 tasks.forEach(function (t) { q.defer(t); });
 
+
+// loads the files in parallel
 q.awaitAll(function (error, results) {
     cuts = results;
-    d3.json('data/tree-nouns-li_abe-5mi-0-06141a7dc4.json', initialize);
+    d3.json('data/tree-n-wagner-1000-0-5000000-1c3eb76.json', initialize);
 });
 
 function initialize(data){
@@ -54,11 +53,14 @@ function initialize(data){
 
     d3.select('body').on('click', clickBody);
 
+    // prevents body from catching clicks on the searchbox
+    d3.select('#searchbox').on('click', function(){ d3.event.stopImmediatePropagation() });
+
     document.onkeydown = function(evt){
         if (evt.keyCode == 38){
             var d = d3.select('g.container > circle.node:first-of-type')
                 .datum().parent;
-            display(d);
+            if (d) display(d);
         }
     };
 }
@@ -78,6 +80,8 @@ function display(root){
         .projection(function(d){ return [d.x, d.y]});
 
     svg.selectAll('g.container').remove();
+    d3.selectAll('.tipsy').remove();
+
 
     var color = d3.scale.quantile()
         .domain(d3.values(nodes.map(function(d){ return d.value; })))
@@ -139,10 +143,40 @@ function display(root){
         .select('title')
         .text(function(d){ return d.key+'\n'+d.value });
 
-
-
     svg.node().appendChild(offscreen.node());
+
 }
+
+function search(str){
+    var re = str != '' ? new RegExp("^(s.)*" + str) : /[^\w\W]/;
+
+    d3.selectAll('circle.node')
+        .each(function(d){
+
+            if (!re.test(d.key)){
+                $(this).tipsy('hide');
+                return;
+            }
+
+            $(this).tipsy({
+                gravity: 's',
+                trigger: 'manual',
+                title: function() { return d.key; }
+            });
+
+            $(this).tipsy('show');
+            var tip = $(this).tipsy(true)['tip']()[0];
+            d3.select(tip)
+                .datum(d)
+                .on('click', clickCircle);
+        });
+}
+
+function width(el) { return d3.select(el).node().clientWidth;  }
+
+function height(el){ return d3.select(el).node().clientHeight; }
+
+function toInt(str){ return +str.replace(/[a-zA-Z]/g, ''); }
 
 /* data mapping */
 /*var nodeRadius = d3.scale().linear()
