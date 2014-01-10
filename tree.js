@@ -25,7 +25,11 @@ var svg = d3.select('body')
 
 var root = null;
 
+var labelNumberFormat = d3.format(",.1f");
+
+// Data
 var cutFiles = JSON.parse(localStorage.getItem('cutFiles')),
+    treeFile = JSON.parse(localStorage.getItem('treeFile')),
     cuts     = null;
 
 // Loading cuts with a little help of queue.js.
@@ -41,7 +45,7 @@ tasks.forEach(function (t) { q.defer(t); });
 // loads the files in parallel
 q.awaitAll(function (error, results) {
     cuts = results;
-    d3.json('data/tree-n-wagner-1000-0-5000000-1c3eb76.json', initialize);
+    d3.json('data/'+treeFile, initialize);
 });
 
 function initialize(data){
@@ -50,6 +54,7 @@ function initialize(data){
     display(root);
 
     d3.select('body').on('click', clickBody);
+    document.title = localStorage.getItem('title');
 
     // prevents body from catching clicks on the searchbox
     d3.select('#searchbox').on('click', function(){ d3.event.stopImmediatePropagation() });
@@ -111,10 +116,11 @@ function display(root){
         .enter()
         .append('svg:path')
         .classed('cut', true)
-        .attr('d', function (d) {
+        .attr('d', function (d,i) {
             var line = d3.svg.line();
             return line(d.map(function (node) {
-                return [node.x, node.y];
+                // draws with an offset to avoid overlap
+                return [node.x+i*2, node.y+i];
             }));
         })
         .style('stroke', function (d, i) { return colors[i]; })
@@ -139,7 +145,7 @@ function display(root){
         .attr("class", function(d) { return "q" + color(d.value) + "-9"; })
         .classed('node', true)
         .select('title')
-        .text(function(d){ return d.key+'\n'+d.value });
+        .text(function(d){ return d.key+'\n'+ labelNumberFormat(d.value) });
 
     svg.node().appendChild(offscreen.node());
 
@@ -157,7 +163,7 @@ function search(str){
             }
 
             $(this).tipsy({
-                gravity: 's',
+                gravity: $.fn.tipsy.autoWE,
                 trigger: 'manual',
                 title: function() { return d.key; }
             });

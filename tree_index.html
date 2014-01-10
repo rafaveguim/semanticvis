@@ -22,24 +22,77 @@
 </head>
 <body>
 
+<h1>Nouns</h1>
 
 <h2><a id='1' href="tree.html" onClick="redirect(event)">Wagner's C values. Noisy data</a></h2>
 <p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
-<p><em>Sample size:</em> 1,500,000</p>
+<p><em>Sample size:</em> 5,000,000</p>
 
+<h2><a id='2' href="tree.html" onClick="redirect(event)">Wagner's C values. Clean data</a></h2>
+<p>In this version, the fragments from the dynamic dictionary are ignored.</p>
+<p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
+<p><em>Sample size:</em> 5,000,000</p>
+
+<h2><a id='3' href="tree.html" onClick="redirect(event)">Wagner's C values. Super clean data</a></h2>
+<p>Here, we take a more conservative approach for selecting synsets. It's strictly compliant with the POS tagging.</p>
+<p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
+<p><em>Sample size:</em> 5,000,000</p>
+
+<h2><a id='4' href="tree.html" onClick="redirect(event)">Wagner's C values. Full, super clean data</a></h2>
+<p>Here we abandon sampling and use the full data. We also improve the aforementioned strategy by ignoring proper names.</p>
+<p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
+<p><em>Sample size:</em> Full</p>
+
+<h1>Verbs</h1>
+
+<h2><a id='5' href="tree.html" onClick="redirect(event)">Wagner's C values. Full, super clean data</a></h2>
+<p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
+<p><em>Sample size:</em> Full</p>
 
 <script>
     function redirect(evt){
         var id = +d3.select(evt.target).attr('id');
 
-        var cuts = [];
+        var cuts = [],
+            tree = null;
 
-        if (id==1){
-            cuts = ['cut-n-wagner-1000-0-5000000-1c3eb76.txt',
-                    'cut-n-wagner-5000-0-5000000-1c3eb76.txt',
-                    'cut-n-wagner-10000-0-5000000-1c3eb76.txt']
+        switch (id){
+            case 1:
+                cuts = ['cut-n-wagner-1000-0-5000000-1c3eb76.txt',
+                        'cut-n-wagner-5000-0-5000000-1c3eb76.txt',
+                        'cut-n-wagner-10000-0-5000000-1c3eb76.txt'];
+                tree = 'tree-n-0-5000000-1c3eb76.json';
+                break;
+            case 2:
+                cuts = ['cut-n-wagner-1000-0-5000000-247f661.txt',
+                        'cut-n-wagner-5000-0-5000000-247f661.txt',
+                        'cut-n-wagner-10000-0-5000000-247f661.txt'];
+                tree = 'tree-n-0-5000000-247f661.json';
+                break;
+            case 3:
+                cuts = ['cut-n-wagner-1000-0-5000000-d567aa6.txt',
+                        'cut-n-wagner-5000-0-5000000-d567aa6.txt',
+                        'cut-n-wagner-10000-0-5000000-d567aa6.txt'];
+                tree =  'tree-n-0-5000000-d567aa6.json';
+                break;
+            case 4:
+                cuts = ['cut-n-wagner-1000-0-d567aa6.txt',
+                        'cut-n-wagner-5000-0-d567aa6.txt',
+                        'cut-n-wagner-10000-0-d567aa6.txt'];
+                tree = 'tree-n-0-d567aa6.json';
+                break;
+            case 5:
+                cuts = ['cut-v-wagner-1000-0-7a3a7cc.txt',
+                    'cut-v-wagner-5000-0-7a3a7cc.txt',
+                    'cut-v-wagner-10000-0-7a3a7cc.txt'];
+                tree = 'tree-v-0-7a3a7cc.json';
+                break;
         }
+
+
         localStorage.setItem('cutFiles', JSON.stringify(cuts));
+        localStorage.setItem('treeFile', JSON.stringify(tree));
+        localStorage.setItem('title', d3.select(evt.target).text());
     }
 </script>
 
