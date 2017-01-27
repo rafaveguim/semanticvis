@@ -49,6 +49,12 @@
 <p><em>C:</em> 1,000 (golden); 5,000 (red); 10,000 (blue)</p>
 <p><em>Sample size:</em> Full</p>
 
+<h1>January-2015-Journal-Paper-Abstraction-Experiments</h1>
+
+<h2><a id='6' href="tree.html" onClick="redirect(event)">Wagner's C values.</a></h2>
+<p><em>C:</em> 2,000 (golden); 3,000 (red); 5,000 (blue)</p>
+<p><em>Sample size:</em> Full</p>
+
 <script>
     function redirect(evt){
         var id = +d3.select(evt.target).attr('id');
@@ -86,6 +92,10 @@
                     'cut-v-wagner-5000-0-7a3a7cc.txt',
                     'cut-v-wagner-10000-0-7a3a7cc.txt'];
                 tree = 'tree-v-0-7a3a7cc.json';
+                break;
+            case 6:
+                cuts = ['jan-2015-pwds-abstraction-experiments/cut-1-n-wagner-3000-0.txt'];
+                tree = 'jan-2015-pwds-abstraction-experiments/tree-1-n-0.json';
                 break;
         }
 
